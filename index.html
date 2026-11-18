@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Koding dan Kecerdasan Artifisial: Misi Teknisi Digital</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0b1220;overflow:hidden;font-family:Segoe UI,Roboto,Arial,sans-serif}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;background:#10203a;color:#f1f5f9;transform-origin:center;display:flex;flex-direction:column;overflow:hidden}
+#hud{height:80px;background:#0b1730;display:flex;align-items:center;gap:20px;padding:0 28px;border-bottom:3px solid #38bdf8}
+#hud b{font-size:22px}
+.bar{flex:1;height:14px;background:#334155;border-radius:7px;overflow:hidden}
+.bar i{display:block;height:100%;background:#22c55e;transition:width .4s}
+.lvb{width:44px;height:44px;border-radius:50%;border:2px solid #64748b;background:#1e293b;color:#fff;font-size:18px;font-weight:700;cursor:pointer}
+.lvb.on{background:#38bdf8;color:#0b1220;border-color:#38bdf8}
+.lvb:disabled{opacity:.35;cursor:not-allowed}
+#main{flex:1;padding:24px 48px;display:flex;flex-direction:column;gap:16px;overflow:hidden}
+h1{font-size:46px;line-height:1.15;color:#fde047}
+h2{font-size:32px;color:#fde047}
+p,li{font-size:22px;line-height:1.45}
+.c{align-items:center;justify-content:center;text-align:center}
+.btn{min-height:56px;padding:10px 28px;border:0;border-radius:12px;background:#38bdf8;color:#0b1220;font-size:22px;font-weight:700;cursor:pointer}
+.btn:hover{background:#7dd3fc}
+.btn.alt{background:#e2e8f0}
+.row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.opt{min-height:64px;text-align:left;padding:12px 20px;border-radius:12px;border:3px solid #475569;background:#1e3358;color:#f8fafc;font-size:22px;cursor:pointer}
+.opt:hover:not(:disabled){border-color:#38bdf8}
+.opt.ok{background:#166534;border-color:#4ade80}
+.opt.no{background:#991b1b;border-color:#f87171}
+.opt.sel{border-color:#fde047;background:#3b4f7a}
+.opt:disabled{cursor:default}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.q{font-size:28px;font-weight:600}
+pre{background:#020617;border-left:6px solid #38bdf8;padding:14px 20px;font-size:22px;font-family:Consolas,monospace;color:#bbf7d0;border-radius:8px}
+#fb{min-height:64px;padding:12px 20px;border-radius:12px;font-size:21px;display:none}
+#fb.ok{display:block;background:#14532d}
+#fb.no{display:block;background:#7f1d1d}
+.slot{min-height:52px;padding:10px 16px;border:2px dashed #64748b;border-radius:10px;font-size:20px}
+.slot.f{border:2px solid #4ade80;background:#14532d}
+.card{background:#1e3358;border-radius:14px;padding:18px 24px}
+.stars{font-size:60px;color:#fde047}
+.grow{flex:1}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+const $=s=>document.querySelector(s);
+const E=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const sh=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
+let ac;
+function beep(ok){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type=ok?'sine':'square';o.frequency.value=ok?680:190;g.gain.value=.07;o.start();o.stop(ac.currentTime+(ok?.15:.3))}catch(e){}}
+function fit(){const k=Math.min(innerWidth/1280,innerHeight/720);$('#stage').style.transform=`translate(-50%,-50%) scale(${k})`}
+addEventListener('resize',fit);fit();
+
+const AI2=['Perlu KA (belajar dari data)','Cukup aturan koding biasa'];
+const LV=[
+{n:'Kenalan dengan KA',t:'quiz',intro:'Jawab 3 pertanyaan dasar tentang Kecerdasan Artifisial (KA).',items:[
+{q:'Apa yang dimaksud Kecerdasan Artifisial (KA)?',o:['Komputer yang dapat meniru kemampuan manusia seperti belajar dan mengambil keputusan','Kabel khusus untuk menyambung internet','Program yang hanya bisa menyalin berkas','Robot yang selalu berbentuk manusia'],a:0,e:'KA membuat mesin mampu belajar dan memutuskan, tidak hanya mengikuti perintah tetap.'},
+{q:'Manakah contoh KA di dunia kerja bengkel otomotif?',o:['Menyalakan lampu dengan sakelar','Aplikasi yang memprediksi waktu ganti suku cadang dari data sensor','Mencetak nota dengan printer','Menyimpan foto di flashdisk'],a:1,e:'Prediksi dari data sensor adalah contoh KA yang belajar pola.'},
+{q:'Apa bahan utama agar KA dapat belajar?',o:['Casing komputer','Kabel LAN','Data','Gambar latar layar'],a:2,e:'KA belajar pola dari data. Makin baik datanya, makin baik hasilnya.'}]},
+{n:'Cocokkan Istilah',t:'match',intro:'Pilih istilah di kiri, lalu pilih artinya di kanan.',pairs:[
+['Koding','Menulis instruksi untuk komputer dengan bahasa pemrograman'],
+['Algoritma','Urutan langkah sistematis untuk menyelesaikan masalah'],
+['Variabel','Wadah penyimpan data yang nilainya dapat berubah'],
+['Data','Fakta atau angka yang diolah menjadi informasi'],
+['Pembelajaran mesin','Cara komputer belajar pola dari data']]},
+{n:'Susun Algoritma',t:'order',intro:'Sistem pesanan kafe daring. Tekan langkah sesuai urutan yang benar.',steps:[
+'Pelanggan memilih menu','Sistem mencatat pesanan','Sistem menghitung total harga','Pelanggan membayar','Dapur menyiapkan pesanan']},
+{n:'Tebak Keluaran Kode',t:'quiz',intro:'Baca kode, lalu tentukan hasil yang tampil.',items:[
+{q:'Apa yang tampil?',c:'suhu = 35\nif suhu > 30:\n    tampil("Kipas ON")\nelse:\n    tampil("Kipas OFF")',o:['Kipas ON','Kipas OFF','35','Tidak tampil apa-apa'],a:0,e:'Karena 35 lebih besar dari 30, kondisi bernilai benar.'},
+{q:'Berapa nilai yang tampil?',c:'total = 0\nuntuk i dari 1 sampai 3:\n    total = total + i\ntampil(total)',o:['3','5','6','123'],a:2,e:'0+1+2+3 = 6. Perulangan mengulang instruksi yang sama.'},
+{q:'Apa yang tampil?',c:'stok = 8\nif stok < 5:\n    tampil("Pesan ulang")\nelse:\n    tampil("Stok aman")',o:['Pesan ulang','Stok aman','8','Error'],a:1,e:'8 tidak kurang dari 5, jadi cabang else yang berjalan.'}]},
+{n:'Pilah KA dan Etika',t:'quiz',intro:'Tentukan tugas yang butuh KA, lalu jawab satu soal etika.',items:[
+{q:'Mengenali wajah karyawan untuk absensi',o:AI2,a:0,fx:1,e:'Mengenali wajah perlu model yang belajar dari banyak data.'},
+{q:'Menghitung gaji = jam kerja × tarif',o:AI2,a:1,fx:1,e:'Rumusnya tetap, cukup aturan koding.'},
+{q:'Chatbot yang memahami pertanyaan bebas pelanggan',o:AI2,a:0,fx:1,e:'Memahami bahasa bebas membutuhkan KA.'},
+{q:'Menyaring email spam dari pola kata',o:AI2,a:0,fx:1,e:'Pola spam dipelajari dari contoh email.'},
+{q:'Mengurutkan nama siswa dari A sampai Z',o:AI2,a:1,fx:1,e:'Pengurutan memakai algoritma biasa.'},
+{q:'Data pelanggan akan dipakai untuk melatih KA. Sikap yang tepat?',o:['Meminta izin dan menjaga kerahasiaan data pribadi','Menjual data ke pihak lain','Memakai data tanpa memberi tahu pemiliknya','Membagikan data ke grup media sosial'],a:0,e:'Privasi dan izin pemilik data adalah prinsip utama etika KA.'}]}
+];
+let S={hp:3,score:0,max:0,lv:0,i:0,ls:0};
+
+function hud(){return `<div id="hud"><b>Level ${S.lv+1} dari 5</b><div class="bar"><i style="width:${(S.max/5)*100}%"></i></div>
+${LV.map((l,k)=>`<button class="lvb ${k==S.lv?'on':''}" ${k>S.max?'disabled':''} onclick="startLv(${k})" title="${l.n}" aria-label="Level ${k+1}">${k+1}</button>`).join('')}
+<b>❤ ${S.hp}</b><b>⭐ ${S.score}</b><button class="btn alt" style="min-height:44px;padding:4px 16px;font-size:18px" onclick="home()">Beranda</button></div>`}
+function view(h,c){$('#stage').innerHTML=(c?'':hud())+`<div id="main" class="${c?'c':''}">${h}</div>`}
+function home(){S={hp:3,score:0,max:0,lv:0,i:0,ls:0};view(`<h1>Koding dan Kecerdasan Artifisial:<br>Misi Teknisi Digital</h1>
+<p>Selesaikan 5 level misi, kumpulkan skor, dan jadilah Teknisi Digital andal!</p>
+<p style="color:#7dd3fc">Bagaimana komputer bisa belajar dan mengambil keputusan seperti manusia?</p>
+<div class="row"><button class="btn" onclick="startLv(0)">▶ Mulai Misi</button><button class="btn alt" onclick="guide()">📖 Panduan</button></div>`,1)}
+function guide(){view(`<h2>Panduan Bermain</h2>
+<div class="card"><ul style="padding-left:28px"><li><b>Tujuan:</b> memahami dasar koding dan KA melalui 5 misi.</li>
+<li><b>Nyawa:</b> kamu punya ❤ 3 di setiap level. Jawaban salah mengurangi 1 nyawa.</li>
+<li><b>Skor:</b> setiap jawaban benar bernilai 100 poin.</li>
+<li><b>Navigasi:</b> tombol bulat 1 sampai 5 di atas membuka level yang sudah terbuka.</li>
+<li><b>Misi:</b> 1 Kenalan KA, 2 Cocokkan istilah, 3 Susun algoritma, 4 Tebak kode, 5 Pilah KA dan etika.</li></ul></div>
+<div class="row" style="margin-top:auto"><button class="btn alt" onclick="home()">← Kembali</button><button class="btn" onclick="startLv(0)">Mulai Misi →</button></div>`,1)}
+function startLv(k){S.lv=k;S.i=0;S.hp=3;S.ls=S.score;S.n=0;S.sel=null;S.d=[];draw()}
+function fb(ok,t){const f=$('#fb');f.className=ok?'ok':'no';f.innerHTML=(ok?'✔ Benar! ':'✘ Belum tepat. ')+t}
+function hit(msg){beep(0);S.hp--;if(S.hp<=0){over();return false}$('#hud').outerHTML=hud();fb(0,msg);return true}
+function gain(){beep(1);S.score+=100;$('#hud').outerHTML=hud()}
+function draw(){const L=LV[S.lv];
+if(L.t=='quiz'){const it=L.items[S.i];S.o=it.fx?it.o.slice():sh(it.o);S.ans=it.o[it.a];
+view(`<h2>${L.n} · Soal ${S.i+1}/${L.items.length}</h2><p>${L.intro}</p><div class="q">${E(it.q)}</div>${it.c?`<pre>${E(it.c)}</pre>`:''}
+<div class="grid2">${S.o.map((x,k)=>`<button class="opt" onclick="pick(${k})">${E(x)}</button>`).join('')}</div><div id="fb"></div><div class="grow"></div><div class="row" id="nx"></div>`)}
+else if(L.t=='match'){S.L=sh(L.pairs.map((p,k)=>[k,p[0]]));S.R=sh(L.pairs.map((p,k)=>[k,p[1]]));
+view(`<h2>${L.n}</h2><p>${L.intro}</p><div class="grid2"><div style="display:grid;gap:10px">${S.L.map(x=>`<button class="opt" id="l${x[0]}" onclick="mL(${x[0]})">${E(x[1])}</button>`).join('')}</div>
+<div style="display:grid;gap:10px">${S.R.map(x=>`<button class="opt" id="r${x[0]}" style="font-size:18px;min-height:56px" onclick="mR(${x[0]})">${E(x[1])}</button>`).join('')}</div></div><div id="fb"></div><div class="grow"></div><div class="row" id="nx"></div>`)}
+else{S.sh=sh(L.steps.map((s,k)=>[k,s]));
+view(`<h2>${L.n}</h2><p>${L.intro}</p><div class="grid2"><div style="display:grid;gap:10px">${S.sh.map(x=>`<button class="opt" id="s${x[0]}" onclick="oS(${x[0]})">${E(x[1])}</button>`).join('')}</div>
+<div style="display:grid;gap:10px">${L.steps.map((s,k)=>`<div class="slot" id="p${k}">${k+1}. …</div>`).join('')}</div></div><div id="fb"></div><div class="grow"></div><div class="row" id="nx"></div>`)}}
+function pick(k){const B=document.querySelectorAll('.opt'),it=LV[S.lv].items[S.i];
+if(S.o[k]==S.ans){gain();B.forEach((b,j)=>{b.disabled=1;if(j==k)b.classList.add('ok')});fb(1,it.e);
+$('#nx').innerHTML=`<button class="btn" onclick="nxt()">Lanjut →</button>`}
+else{B[k].classList.add('no');B[k].disabled=1;hit('Coba lagi. Petunjuk: '+it.e.split('.')[0]+'.')}}
+function nxt(){S.i++;if(S.i>=LV[S.lv].items.length)done();else draw()}
+function mL(k){if(S.d.includes(k))return;S.sel=k;document.querySelectorAll('[id^=l]').forEach(b=>b.classList.remove('sel'));$('#l'+k).classList.add('sel')}
+function mR(k){if(S.sel===null||S.d.includes(k))return;
+if(k==S.sel){gain();S.d.push(k);['#l','#r'].forEach(p=>{const b=$(p+k);b.classList.remove('sel');b.classList.add('ok');b.disabled=1});S.sel=null;fb(1,'Pasangan istilah tepat.');
+if(S.d.length==LV[S.lv].pairs.length)$('#nx').innerHTML=`<button class="btn" onclick="done()">Selesai →</button>`}
+else hit('Pasangan itu belum cocok. Baca arti istilahnya lagi.')}
+function oS(k){if(k==S.n){gain();const b=$('#s'+k);b.disabled=1;b.classList.add('ok');const p=$('#p'+k);p.className='slot f';p.textContent=(k+1)+'. '+LV[S.lv].steps[k];S.n++;fb(1,'Langkah ke-'+S.n+' tepat.');
+if(S.n==LV[S.lv].steps.length)$('#nx').innerHTML=`<button class="btn" onclick="done()">Selesai →</button>`}
+else{const b=$('#s'+k);b.classList.add('no');setTimeout(()=>b.classList.remove('no'),500);hit('Itu belum jadi langkah berikutnya. Pikirkan apa yang harus terjadi lebih dulu.')}}
+function done(){S.max=Math.max(S.max,S.lv+1);if(S.lv==4){end();return}
+view(`<h1>Level ${S.lv+1} selesai! 🎉</h1><p>Skor kamu: <b>${S.score}</b> · Nyawa tersisa: ${S.hp}</p><div class="row"><button class="btn alt" onclick="startLv(${S.lv})">Ulangi Level</button><button class="btn" onclick="startLv(${S.lv+1})">Level ${S.lv+2} →</button></div>`,1)}
+function over(){view(`<h1>Nyawa habis 💔</h1><p>Tenang, setiap kesalahan adalah bahan belajar. Coba lagi ya!</p><div class="row"><button class="btn" onclick="S.score=S.ls;startLv(S.lv)">Ulangi Level ${S.lv+1}</button><button class="btn alt" onclick="home()">Beranda</button></div>`,1)}
+function end(){const m=1300,st=S.score>=m*.9?3:S.score>=m*.6?2:1;
+view(`<h1>Misi Selesai!</h1><div class="stars">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div><p>Skor akhir: <b>${S.score}</b></p>
+<p style="max-width:900px">Kamu sudah memahami: KA belajar dari data, algoritma adalah urutan langkah, percabangan dan perulangan mengatur alur program, serta data pribadi harus dijaga.</p>
+<div class="row"><button class="btn alt" onclick="home()">Main Lagi</button><button class="btn" onclick="credit()">Informasi Kreator →</button></div>`,1)}
+function credit(){view(`<h2>Informasi Kreator</h2><div class="card"><p><b>Kreator:</b> [Isi nama kamu di sini]</p><p><b>Organisasi:</b> [Isi nama sekolah]</p><p><b>Aset:</b> seluruh visual dibuat dengan kode (CSS) tanpa aset eksternal.</p><p><b>Dikembangkan dengan bantuan AI</b> (Claude, Anthropic).</p></div><div class="row"><button class="btn alt" onclick="end()">← Kembali</button><button class="btn" onclick="home()">Beranda</button></div>`,1)}
+home();
+</script>
+</body>
+</html>
